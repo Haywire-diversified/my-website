@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haywire Diversified - Academic & Social Portal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mammoth.js for Word Document (.docx) Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <style>
+        body.theme-classic { background-color: #f3f4f6; color: #111827; }
+        body.theme-dark { background-color: #0f172a; color: #f8fafc; }
+        body.theme-dark .glass-panel, body.theme-dark .bg-white { background-color: #1e293b !important; color: #f8fafc !important; }
+        body.theme-dark .text-gray-800 { color: #f1f5f9 !important; }
+        body.theme-dark .text-gray-700 { color: #cbd5e1 !important; }
+        
+        body.theme-custom-pic {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        body.theme-custom-pic .glass-panel {
+            background: rgba(255, 255, 255, 0.94) !important;
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body id="mainBody" class="theme-classic font-sans transition-colors duration-300">
+
+    <!-- REQUIRED HIDING ELEMENT FORMAT -->
+    <div id="has-finished-comet-page" hidden="" style="display: none;"></div>
+
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="bg-blue-900 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-black text-yellow-400 tracking-wider">HAYWIRE DIVERSIFIED</h1>
+                <p class="text-xs text-blue-200">Interactive Academic & Student Assessment Portal</p>
+            </div>
+            <div class="space-x-3 flex items-center text-xs md:text-sm font-medium">
+                <button onclick="showSection('main-auth')" class="hover:underline text-yellow-300 font-bold">🔐 Portal Access</button>
+                <button onclick="showSection('materials-section')" class="hover:underline text-yellow-200">📚 Course Materials</button>
+                <button onclick="showSection('student-assessment-section')" class="hover:underline text-green-300 font-bold">📝 Interactive CBT Exams</button>
+                <button onclick="showSection('social-hub')" class="hover:underline text-blue-200">💬 WhatsApp-Style Hub</button>
+                <button onclick="toggleModal('themeModal', true)" class="bg-yellow-500 hover:bg-yellow-600 text-blue-950 px-2 py-1 rounded font-bold">🎨 Theme</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- USER SESSION BAR -->
+    <div id="userStatusBar" class="bg-blue-950 text-white px-4 py-1.5 text-xs flex justify-between items-center hidden">
+        <div>
+            User: <span id="statusUserDisplay" class="font-bold text-yellow-400">Guest</span> 
+            | Role: <span id="statusRoleDisplay" class="text-green-400 font-bold">Visitor</span> 
+            | Dept: <span id="statusDeptDisplay" class="text-gray-300">N/A</span> 
+            | Level: <span id="statusLevelDisplay" class="text-yellow-200 font-bold">N/A</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="resetBgBtnSession" onclick="removeBackgroundPicture()" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-0.5 rounded font-bold hidden">🖼️ Remove Bg</button>
+            <button onclick="logoutUser()" class="bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded font-bold">Logout</button>
+        </div>
+    </div>
+
+    <!-- MAIN ACCESS: LOGIN & REGISTRATION -->
+    <section id="main-auth" class="max-w-md mx-auto my-8 p-6 bg-white glass-panel rounded-lg shadow-xl border">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-black text-blue-900">ACADEMIC PORTAL ACCESS</h2>
+            <p class="text-xs text-gray-500">Log in or register to view level-restricted materials & timed assessments</p>
+        </div>
+
+        <!-- AUTH TABS -->
+        <div class="flex border-b mb-6 text-xs font-bold">
+            <button id="tabLoginBtn" onclick="switchAuthMode('login')" class="w-1/2 py-2 text-center text-blue-900 border-b-2 border-blue-900">Account Login</button>
+            <button id="tabRegisterBtn" onclick="switchAuthMode('register')" class="w-1/2 py-2 text-center text-gray-500">New Registration</button>
+        </div>
+
+        <!-- 1. LOGIN FORM -->
+        <form id="unifiedLoginForm" onsubmit="handleUnifiedLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700">Username</label>
+                <input type="text" id="loginUsername" required placeholder="Enter username" class="w-full border rounded p-2 text-xs mt-1">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700">Password</label>
+                <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full border rounded p-2 text-xs mt-1">
+            </div>
+            <button type="submit" class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold py-2 rounded text-xs shadow">Sign In to Portal</button>
+        </form>
+
+        <!-- 2. REGISTRATION FORM -->
+        <form id="registerForm" onsubmit="handleRegistration(event)" class="space-y-3 hidden">
+            <div>
+                <label class="block text-xs font-bold text-gray-700">Account Category</label>
+                <select id="regAccountType" onchange="toggleRegFields(this.value)" class="w-full border rounded p-2 text-xs mt-1 font-bold bg-yellow-50 text-yellow-900">
+                    <option value="STUDENT">Student</option>
+                    <option value="LECTURER">Lecturer / Academic Staff</option>
+                    <option value="NON_STUDENT">Non-Student / Guest</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Full Name</label>
+                <input type="text" id="regFullName" required placeholder="e.g. Osuntoki Ayojesu" class="w-full border rounded p-2 text-xs mt-1">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Email or Phone Number</label>
+                <input type="text" id="regContact" required placeholder="08163059669 or email" class="w-full border rounded p-2 text-xs mt-1">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-blue-900">Login Username</label>
+                <input type="text" id="regUsername" required placeholder="Choose username" class="w-full border rounded p-2 text-xs mt-1 bg-blue-50">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-blue-900">Login Password</label>
+                <input type="password" id="regPassword" required placeholder="••••••••" class="w-full border rounded p-2 text-xs mt-1 bg-blue-50">
+            </div>
+
+            <!-- Student Specific Fields -->
+            <div id="studentFieldsContainer" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Department</label>
+                    <select id="regDeptSelect" class="w-full border rounded p-2 text-xs mt-1">
+                        <option value="MC">Mass Communication</option>
+                        <option value="QS">Quantity Surveying</option>
+                        <option value="CS">Computer Science</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-blue-900">Current Academic Level</label>
+                    <select id="regLevelSelect" class="w-full border rounded p-2 text-xs mt-1 bg-yellow-50 font-bold">
+                        <option value="ND1">ND 1</option>
+                        <option value="ND2">ND 2</option>
+                        <option value="HND1">HND 1</option>
+                        <option value="HND2">HND 2</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Matriculation Number</label>
+                    <input type="text" id="regMatricInput" placeholder="e.g. 21NQS001" class="w-full border rounded p-2 text-xs mt-1">
+                </div>
+            </div>
+
+            <!-- Lecturer Specific Fields -->
+            <div id="lecturerFieldsContainer" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Assigned Department</label>
+                    <select id="regLecturerDept" class="w-full border rounded p-2 text-xs mt-1">
+                        <option value="MC">Mass Communication</option>
+                        <option value="QS">Quantity Surveying</option>
+                        <option value="CS">Computer Science</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-blue-950 font-bold py-2 rounded text-xs shadow">Complete Registration</button>
+        </form>
+    </section>
+
+    <!-- LECTURE MATERIALS & OUTLINES SECTION -->
+    <section id="materials-section" class="max-w-7xl mx-auto p-4 hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- LECTURER / ADMIN ONLY UPLOAD PANEL -->
+            <div id="lecturerUploadSection" class="lg:col-span-1 hidden">
+                <div class="bg-white glass-panel rounded-lg shadow p-5 border-t-4 border-blue-900">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="bg-blue-900 text-white text-xs px-2 py-0.5 rounded font-bold">Lecturer Portal</span>
+                        <h2 class="text-base font-bold text-gray-800">Upload Course Material & Tests</h2>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4">Set time limits for tests and exams targeting specific levels and departments.</p>
+
+                    <form onsubmit="handleMaterialUpload(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Content Category</label>
+                            <select id="matCategory" onchange="toggleTestDurationField(this.value)" class="w-full border rounded p-2 text-xs bg-yellow-50 font-bold">
+                                <option value="LECTURE_NOTE">Lecture Note / Material</option>
+                                <option value="COURSE_OUTLINE">Course Outline</option>
+                                <option value="TEST">Practice Test</option>
+                                <option value="EXAM">Examination</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Course Code & Title</label>
+                            <input type="text" id="matCourseTitle" required placeholder="e.g. GNS 201 - Use of English" class="w-full border rounded p-2 text-xs">
+                        </div>
+
+                        <!-- LECTURER CUSTOM SET TIMER FIELD (ONLY FOR TESTS & EXAMS) -->
+                        <div id="testDurationWrapper" class="bg-amber-50 p-2.5 rounded border border-amber-300 hidden">
+                            <label class="block text-xs font-bold text-amber-900 mb-1">⏱️ Set Assessment Duration (in Minutes)</label>
+                            <input type="number" id="matTestDuration" min="1" max="180" value="15" class="w-full border rounded p-1.5 text-xs bg-white font-bold text-amber-900">
+                            <p class="text-[10px] text-amber-700 mt-1">Students will have exactly this duration to finish once started.</p>
+                        </div>
+
+                        <div class="bg-blue-50 p-2.5 rounded border border-blue-200">
+                            <label class="block text-xs font-bold text-blue-900 mb-1">Target Departments</label>
+                            <div class="grid grid-cols-3 gap-1 text-[11px]">
+                                <label class="flex items-center gap-1"><input type="checkbox" value="MC" class="dept-check"> Mass Comm</label>
+                                <label class="flex items-center gap-1"><input type="checkbox" value="QS" class="dept-check"> Quantity Surv.</label>
+                                <label class="flex items-center gap-1"><input type="checkbox" value="CS" class="dept-check"> Computer Sci.</label>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 p-2.5 rounded border border-yellow-200">
+                            <label class="block text-xs font-bold text-yellow-900 mb-1">Target Academic Levels (Restricted View)</label>
+                            <div class="grid grid-cols-4 gap-1 text-[11px]">
+                                <label class="flex items-center gap-1"><input type="checkbox" value="ND1" class="level-check"> ND 1</label>
+                                <label class="flex items-center gap-1"><input type="checkbox" value="ND2" class="level-check"> ND 2</label>
+                                <label class="flex items-center gap-1"><input type="checkbox" value="HND1" class="level-check"> HND 1</label>
+                                <label class="flex items-center gap-1"><input type="checkbox" value="HND2" class="level-check"> HND 2</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Import Word Doc (.docx) or Text File</label>
+                            <input type="file" accept=".docx, .doc, .txt" onchange="parseWordFile(this)" class="w-full border rounded p-1 text-xs mt-1 bg-white">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Material / Assessment Questions</label>
+                            <textarea id="matTextContent" placeholder="Paste questions or lecture notes here..." class="w-full border rounded p-2 text-xs mt-1 h-28"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold py-2 rounded text-xs shadow">Publish Material & Exam Now</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- STUDENT READ-ONLY MATERIAL FEED (LEVEL RESTRICTED) -->
+            <div id="materialsFeedContainer" class="lg:col-span-3 space-y-4">
+                <div id="studentAccessNotice" class="hidden bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded text-xs">
+                    🔒 <strong>Level-Restricted Access:</strong> You are currently viewing lecture materials and outlines strictly published for <span id="noticeLevelDisplay" class="font-bold underline text-yellow-800"></span> students in your department.
+                </div>
+
+                <div class="bg-white glass-panel rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center border-b pb-2 mb-3">
+                        <h3 class="font-bold text-lg text-gray-800">Level Course Outlines & Lecture Materials</h3>
+                        <span id="levelBadge" class="bg-yellow-400 text-blue-950 font-black text-xs px-2.5 py-1 rounded"></span>
+                    </div>
+                    <div id="studentMaterialsFeed" class="space-y-3 text-xs">
+                        <!-- Filtered Materials Populated Here -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- STUDENT TESTS & EXAMS PORTAL -->
+    <section id="student-assessment-section" class="max-w-7xl mx-auto p-4 hidden space-y-6">
+        <div class="bg-white glass-panel rounded-lg shadow p-6">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <div>
+                    <h2 class="text-2xl font-black text-blue-900">Timed CBT Tests & Exams Portal</h2>
+                    <p class="text-xs text-gray-500">Attempt active tests and examinations with lecturer-defined timers assigned for your level.</p>
+                </div>
+                <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-bold">Active CBT System</span>
+            </div>
+
+            <div id="studentAssessmentsFeed" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <!-- Timed Assessments Populated Here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- WHATSAPP-STYLE INTERACTIVE SOCIAL HUB -->
+    <section id="social-hub" class="max-w-7xl mx-auto p-4 hidden space-y-6">
+        <div class="bg-[#efeae2] border-2 border-emerald-800 rounded-xl shadow-2xl p-4 max-w-4xl mx-auto">
+            <!-- WhatsApp Chat Header -->
+            <div class="bg-[#005e54] text-white p-3 rounded-lg flex justify-between items-center shadow mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center font-bold text-yellow-300 text-lg shadow">💬</div>
+                    <div>
+                        <h2 class="font-bold text-sm tracking-wide">Haywire Campus WhatsApp Hub</h2>
+                        <p class="text-[10px] text-emerald-200">Online community chat & live status broadcasts</p>
+                    </div>
+                </div>
+                <button onclick="toggleModal('statusUploadModal', true)" class="bg-[#25D366] hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-full text-xs shadow flex items-center gap-1">
+                    📷 Share Status
+                </button>
+            </div>
+
+            <!-- WhatsApp Status Stories Feed -->
+            <div class="mb-4 bg-white p-3 rounded-lg shadow-sm">
+                <h3 class="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Recent Campus Statuses</h3>
+                <div id="statusListFeed" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+            </div>
+
+            <!-- WhatsApp Interactive Group Chat Simulation Box -->
+            <div class="bg-[#e5ddd5] border rounded-lg p-3 shadow-inner flex flex-col h-96">
+                <div class="text-center my-1">
+                    <span class="bg-[#daf8cb] text-gray-700 text-[10px] px-3 py-1 rounded-md shadow-sm">Messages are end-to-end encrypted within your academic department.</span>
+                </div>
+                
+                <!-- Chat Log Body -->
+                <div id="whatsappChatBody" class="flex-1 overflow-y-auto space-y-2 p-2 text-xs">
+                    <div class="flex flex-col items-start">
+                        <span class="text-[9px] font-bold text-emerald-800 ml-1">Dr. Ayojesu (Lecturer)</span>
+                        <div class="bg-white p-2.5 rounded-lg rounded-tl-none shadow max-w-[80%] text-gray-800">
+                            Hello everyone, ensure you check out the new exam timer guidelines uploaded on your dashboard.
+                            <div class="text-[9px] text-gray-400 text-right mt-1">10:42 AM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Footer -->
+                <div class="mt-2 pt-2 border-t flex items-center gap-2 bg-[#f0f2f5] p-2 rounded-lg">
+                    <input type="text" id="whatsappMsgInput" onkeydown="if(event.key==='Enter') sendWhatsAppMessage()" placeholder="Type a message..." class="flex-1 border rounded-full px-3 py-2 text-xs bg-white outline-none">
+                    <button onclick="sendWhatsAppMessage()" class="bg-[#00a884] hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-full text-xs shadow">Send ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white glass-panel rounded-lg shadow p-4">
+                <div class="flex justify-between items-center border-b pb-2 mb-2">
+                    <h3 class="font-bold text-xs text-gray-800">Academic Contacts Directory</h3>
+                    <button onclick="renderContactDirectory()" class="bg-blue-900 text-white px-2 py-0.5 rounded text-[10px] font-bold">Refresh</button>
+                </div>
+                <div id="contactListFeed" class="space-y-1.5 text-xs max-h-48 overflow-y-auto"></div>
+            </div>
+
+            <div class="bg-white glass-panel rounded-lg shadow p-4">
+                <h3 class="font-bold text-xs text-gray-800 border-b pb-2 mb-2">Campus Media & Friend Gallery</h3>
+                <div class="mb-2 flex gap-1">
+                    <input type="file" id="friendPicInput" accept="image/*" class="w-full text-xs border bg-white p-1 rounded">
+                    <button onclick="uploadFriendPicture()" class="bg-yellow-500 hover:bg-yellow-600 text-blue-950 font-bold px-2 py-1 rounded text-xs whitespace-nowrap">Upload</button>
+                </div>
+                <div id="friendsGalleryGrid" class="grid grid-cols-3 gap-1.5 max-h-40 overflow-y-auto"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TIMED CBT EXAM TAKING MODAL WITH LIVE COUNTDOWN TIMER -->
+    <div id="takeTestModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white glass-panel w-full max-w-xl rounded-xl shadow-2xl p-6 relative">
+            <button onclick="closeTestModal()" class="absolute top-3 right-3 text-gray-500 font-bold text-base">✕</button>
+            
+            <div class="flex justify-between items-center border-b pb-2 mb-3">
+                <h3 id="testModalTitle" class="text-base font-black text-blue-900">Timed CBT Assessment</h3>
+                <!-- WhatsApp / CBT Style Live Timer Pill -->
+                <div id="cbtTimerDisplay" class="bg-red-600 text-white font-mono font-black text-xs px-3 py-1 rounded-full shadow animate-pulse">
+                    ⏱️ Time Left: <span id="timerCountdown">00:00</span>
+                </div>
+            </div>
+
+            <p id="testModalContent" class="text-xs bg-gray-100 p-3 rounded mb-4 font-mono text-gray-800 whitespace-pre-line max-h-40 overflow-y-auto border"></p>
+            
+            <form id="testAnswerForm" onsubmit="submitAssessmentAnswer(event)" class="space-y-3 border-t pt-3">
+                <label class="block text-xs font-bold text-gray-700">Select Your Final Exam Choice:</label>
+                <div class="space-y-1.5 text-xs">
+                    <label class="flex items-center gap-2 bg-blue-50 p-2 rounded cursor-pointer border"><input type="radio" name="cbtOption" value="Option A" required> Option A</label>
+                    <label class="flex items-center gap-2 bg-blue-50 p-2 rounded cursor-pointer border"><input type="radio" name="cbtOption" value="Option B"> Option B</label>
+                    <label class="flex items-center gap-2 bg-blue-50 p-2 rounded cursor-pointer border"><input type="radio" name="cbtOption" value="Option C"> Option C</label>
+                    <label class="flex items-center gap-2 bg-blue-50 p-2 rounded cursor-pointer border"><input type="radio" name="cbtOption" value="Option D"> Option D</label>
+                </div>
+                <button type="submit" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded text-xs shadow mt-2">Submit Exam Answers</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- WHATSAPP STATUS UPLOAD MODAL -->
+    <div id="statusUploadModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white glass-panel w-full max-w-md rounded-lg shadow-xl p-6 relative">
+            <button onclick="toggleModal('statusUploadModal', false)" class="absolute top-3 right-3 text-gray-500 font-bold">✕</button>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Post WhatsApp-Style Status</h3>
+            <form onsubmit="handleStatusSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Status Caption / Update</label>
+                    <textarea id="statusText" required placeholder="What's happening on campus?" class="w-full border rounded p-2 text-xs h-20 bg-white"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">WhatsApp Status Theme</label>
+                    <select id="statusBgColor" class="w-full border rounded p-2 text-xs bg-white">
+                        <option value="bg-[#005e54]">WhatsApp Teal</option>
+                        <option value="bg-blue-900">Deep Blue</option>
+                        <option value="bg-emerald-800">Emerald Green</option>
+                        <option value="bg-purple-900">Purple Broadcast</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Attachment Image (Optional)</label>
+                    <input type="file" id="statusImageInput" accept="image/*" class="w-full border rounded p-1 text-xs bg-white">
+                </div>
+                <button type="submit" class="w-full bg-[#25D366] text-white font-bold py-2 rounded text-xs shadow">Publish to Status Feed</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SITE THEME MODAL -->
+    <div id="themeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white glass-panel w-full max-w-md rounded-lg shadow-xl p-6 relative">
+            <button onclick="toggleModal('themeModal', false)" class="absolute top-3 right-3 text-gray-500 font-bold">✕</button>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Customize Site Theme</h3>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="setSiteTheme('auto')" class="p-2 border border-blue-600 rounded text-xs font-bold bg-blue-50 text-blue-900 col-span-2">⚡ Auto (Device Preference)</button>
+                <button onclick="setSiteTheme('theme-classic')" class="p-2 border rounded text-xs font-bold bg-gray-100 text-gray-800">Light Theme</button>
+                <button onclick="setSiteTheme('theme-dark')" class="p-2 border rounded text-xs font-bold bg-gray-900 text-white">Dark Theme</button>
+            </div>
+            <hr class="my-3">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Upload Personal Background Picture</label>
+                    <input type="file" accept="image/*" onchange="applyCustomBgPicture(event)" class="w-full border rounded p-1 text-xs bg-white">
+                </div>
+                <button id="resetBgBtnModal" onclick="removeBackgroundPicture()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded text-xs shadow hidden">
+                    ❌ Remove Custom Background
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOATING CONTACT SUPPORT BUTTON -->
+    <div class="fixed bottom-4 right-4 z-50">
+        <button onclick="toggleModal('contactModal', true)" class="bg-yellow-500 hover:bg-yellow-600 text-blue-950 font-black px-4 py-3 rounded-full shadow-2xl flex items-center gap-2 text-xs border-2 border-blue-900">
+            💬 Contact Admin
+        </button>
+    </div>
+
+    <!-- CONTACT US MODAL -->
+    <div id="contactModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white glass-panel w-full max-w-md rounded-lg shadow-xl p-6 relative">
+            <button onclick="toggleModal('contactModal', false)" class="absolute top-3 right-3 text-gray-500 font-bold">✕</button>
+            <h3 class="text-xl font-black text-blue-900 mb-1">Platform Support & Contact</h3>
+            <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg space-y-3 text-xs mt-3">
+                <div>
+                    <span class="text-gray-500 font-bold">General Administrator:</span>
+                    <p class="font-bold text-blue-950 text-sm">OSUNTOKI AYOJESU</p>
+                </div>
+                <div>
+                    <span class="text-gray-500 font-bold">Phone:</span>
+                    <p class="font-bold text-blue-950 text-sm">08163059669</p>
+                </div>
+                <div>
+                    <span class="text-gray-500 font-bold">Email:</span>
+                    <p class="font-bold text-blue-950 text-sm">osuntokiayojesu@gmail.com</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <a href="https://wa.me/2348163059669" target="_blank" class="text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded text-xs shadow">WhatsApp</a>
+                    <a href="tel:08163059669" class="text-center bg-blue-900 hover:bg-blue-950 text-white font-bold py-2 rounded text-xs shadow">Phone Call</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLICATION LOGIC ENGINE -->
+    <script>
+        // REGISTERED ACCOUNTS DATABASE
+        let registeredUsersDB = [
+            {
+                username: "admin",
+                password: "123",
+                name: "Osuntoki Ayojesu (Admin)",
+                role: "GENERAL_ADMIN",
+                contact: "08163059669",
+                dept: "ALL",
+                level: "STAFF"
+            },
+            {
+                username: "lecturer1",
+                password: "123",
+                name: "Dr. Ayojesu",
+                role: "LECTURER",
+                contact: "osuntokiayojesu@gmail.com",
+                dept: "MC",
+                level: "STAFF"
+            },
+            {
+                username: "nd1student",
+                password: "123",
+                name: "ND1 Sample Student",
+                role: "STUDENT",
+                contact: "student@mail.com",
+                dept: "MC",
+                level: "ND1"
+            }
+        ];
+
+        let loggedInUser = null;
+        let isAutoTheme = true;
+        let friendsPictures = [];
+        let activeExamTimerInterval = null;
+        
+        let userStatuses = [
+            { id: 1, user: "Dr. Ayojesu", text: "Welcome to Haywire Diversified! CBT Exam timers have been updated for all ND1/ND2 courses.", color: "bg-[#005e54]", image: null, likes: 5, comments: ["Noted sir!", "Thank you!"] }
+        ];
+
+        let whatsappChatMessages = [
+            { sender: "Dr. Ayojesu", text: "Welcome everyone to the official department chat room.", time: "09:00 AM" }
+        ];
+
+        let contactDirectory = [
+            { name: "Osuntoki Ayojesu (Admin)", phone: "08163059669", role: "ADMIN / LECTURER", email: "osuntokiayojesu@gmail.com" }
+        ];
+
+        let publishedMaterials = [
+            {
+                category: "COURSE_OUTLINE",
+                title: "GNS 101 - ND1 Course Outline",
+                depts: ["MC", "QS", "CS"],
+                levels: ["ND1"],
+                duration: 0,
+                content: "1. Introduction to Communication\n2. Parts of Speech & Grammar\n3. Essay Writing Basics"
+            },
+            {
+                category: "TEST",
+                title: "ND1 Mass Comm Practice Test 1",
+                depts: ["MC"],
+                levels: ["ND1"],
+                duration: 10, // 10 Minutes set by lecturer
+                content: "Question 1: What is the primary element of human communication?\nQuestion 2: Define feedback in two-way communication models."
+            }
+        ];
+
+        // USER REGISTRATION
+        function handleRegistration(e) {
+            e.preventDefault();
+            const accountType = document.getElementById('regAccountType').value;
+            const fullName = document.getElementById('regFullName').value;
+            const contact = document.getElementById('regContact').value;
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            if (registeredUsersDB.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+                alert("Username is already taken! Choose a different username.");
+                return;
+            }
+
+            let newUser = {
+                username,
+                password,
+                name: fullName,
+                role: accountType,
+                contact: contact,
+                dept: accountType === 'STUDENT' ? document.getElementById('regDeptSelect').value : (accountType === 'LECTURER' ? document.getElementById('regLecturerDept').value : 'GUEST'),
+                level: accountType === 'STUDENT' ? document.getElementById('regLevelSelect').value : 'N/A',
+                matric: accountType === 'STUDENT' ? document.getElementById('regMatricInput').value.toUpperCase() : null
+            };
+
+            registeredUsersDB.push(newUser);
+            contactDirectory.push({ name: fullName, phone: contact, role: accountType, email: contact });
+            
+            loggedInUser = newUser;
+            updateSessionUI();
+            renderAllFeeds();
+            alert(`Registration successful! Logged in as ${loggedInUser.level} Student.`);
+            showSection('materials-section');
+        }
+
+        // UNIFIED LOGIN BY USERNAME & PASSWORD ONLY
+        function handleUnifiedLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('loginUsername').value.trim();
+            const passwordInput = document.getElementById('loginPassword').value;
+
+            const foundUser = registeredUsersDB.find(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.password === passwordInput);
+
+            if (!foundUser) {
+                alert("Invalid username or password! Please check credentials or register.");
+                return;
+            }
+
+            loggedInUser = foundUser;
+            updateSessionUI();
+            renderAllFeeds();
+            alert(`Welcome back, ${loggedInUser.name}!`);
+            showSection('materials-section');
+        }
+
+        function updateSessionUI() {
+            document.getElementById('userStatusBar').classList.remove('hidden');
+            document.getElementById('statusUserDisplay').innerText = loggedInUser.username;
+            document.getElementById('statusRoleDisplay').innerText = loggedInUser.role;
+            document.getElementById('statusDeptDisplay').innerText = loggedInUser.dept || "ALL";
+            document.getElementById('statusLevelDisplay').innerText = loggedInUser.level || "ALL";
+
+            const isLecturerOrAdmin = loggedInUser.role === 'LECTURER' || loggedInUser.role === 'GENERAL_ADMIN';
+            const uploadSection = document.getElementById('lecturerUploadSection');
+            const feedContainer = document.getElementById('materialsFeedContainer');
+            const studentNotice = document.getElementById('studentAccessNotice');
+
+            if (isLecturerOrAdmin) {
+                uploadSection.classList.remove('hidden');
+                feedContainer.classList.remove('lg:col-span-3');
+                feedContainer.classList.add('lg:col-span-2');
+                studentNotice.classList.add('hidden');
+                document.getElementById('levelBadge').innerText = "Lecturer View (All Levels)";
+            } else {
+                uploadSection.classList.add('hidden');
+                feedContainer.classList.remove('lg:col-span-2');
+                feedContainer.classList.add('lg:col-span-3');
+                studentNotice.classList.remove('hidden');
+                document.getElementById('noticeLevelDisplay').innerText = loggedInUser.level || "ALL";
+                document.getElementById('levelBadge').innerText = `${loggedInUser.level} Restricted Feed`;
+            }
+        }
+
+        function logoutUser() {
+            loggedInUser = null;
+            document.getElementById('userStatusBar').classList.add('hidden');
+            showSection('main-auth');
+        }
+
+        function toggleTestDurationField(cat) {
+            const wrapper = document.getElementById('testDurationWrapper');
+            if (cat === 'TEST' || cat === 'EXAM') {
+                wrapper.classList.remove('hidden');
+            } else {
+                wrapper.classList.add('hidden');
+            }
+        }
+
+        // LECTURER MATERIAL & EXAM TIMER UPLOAD
+        function handleMaterialUpload(e) {
+            e.preventDefault();
+            if (!loggedInUser || (loggedInUser.role !== 'LECTURER' && loggedInUser.role !== 'GENERAL_ADMIN')) {
+                alert("Access Restricted: Only Lecturers can upload materials!");
+                return;
+            }
+
+            const category = document.getElementById('matCategory').value;
+            const title = document.getElementById('matCourseTitle').value;
+            const content = document.getElementById('matTextContent').value;
+            const duration = (category === 'TEST' || category === 'EXAM') ? parseInt(document.getElementById('matTestDuration').value) || 15 : 0;
+            const selectedDepts = Array.from(document.querySelectorAll('.dept-check:checked')).map(cb => cb.value);
+            const selectedLevels = Array.from(document.querySelectorAll('.level-check:checked')).map(cb => cb.value);
+
+            if (selectedDepts.length === 0 || selectedLevels.length === 0) { 
+                alert("Please select target departments and levels!"); 
+                return; 
+            }
+            if (!content) { 
+                alert("Please enter notes or test content!"); 
+                return; 
+            }
+
+            publishedMaterials.unshift({ category, title, depts: selectedDepts, levels: selectedLevels, duration, content });
+            renderAllFeeds();
+            alert(`Material published successfully! Timer set to ${duration} minutes for ${category}.`);
+            document.getElementById('matTextContent').value = "";
+        }
+
+        function renderAllFeeds() {
+            renderStudentMaterialsFeed();
+            renderStudentAssessmentsFeed();
+            renderStatusFeed();
+            renderWhatsAppChat();
+            renderContactDirectory();
+        }
+
+        // STRICT LEVEL-BASED FILTERING FOR STUDENTS
+        function renderStudentMaterialsFeed() {
+            const feed = document.getElementById('studentMaterialsFeed');
+            const notesAndOutlines = publishedMaterials.filter(m => m.category === 'LECTURE_NOTE' || m.category === 'COURSE_OUTLINE');
+
+            const visible = notesAndOutlines.filter(m => {
+                if (!loggedInUser || loggedInUser.role === 'LECTURER' || loggedInUser.role === 'GENERAL_ADMIN') return true;
+                return m.levels.includes(loggedInUser.level) && m.depts.includes(loggedInUser.dept);
+            });
+
+            if (visible.length === 0) {
+                feed.innerHTML = `<div class="p-6 text-center text-gray-500 bg-gray-50 rounded border">No lecture notes or course outlines currently published for <strong>${loggedInUser ? loggedInUser.level : 'your level'}</strong>.</div>`;
+                return;
+            }
+
+            feed.innerHTML = visible.map(m => `
+                <div class="border rounded-lg p-4 bg-gray-50 shadow-sm border-l-4 border-l-blue-900">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="font-bold text-blue-900 text-sm">${m.title}</div>
+                        <span class="text-[9px] bg-blue-200 text-blue-900 font-bold px-2 py-0.5 rounded">${m.category}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 my-1.5">
+                        <span class="text-[9px] font-bold text-gray-500">Target Level(s):</span>
+                        ${m.levels.map(l => `<span class="bg-yellow-200 text-yellow-900 font-bold text-[9px] px-1.5 py-0.2 rounded">${l}</span>`).join('')}
+                    </div>
+                    <p class="text-gray-700 text-xs whitespace-pre-line mt-2 bg-white p-2 rounded border">${m.content}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderStudentAssessmentsFeed() {
+            const feed = document.getElementById('studentAssessmentsFeed');
+            const testsAndExams = publishedMaterials.filter(m => m.category === 'TEST' || m.category === 'EXAM');
+
+            const visible = testsAndExams.filter(m => {
+                if (!loggedInUser || loggedInUser.role === 'LECTURER' || loggedInUser.role === 'GENERAL_ADMIN') return true;
+                return m.levels.includes(loggedInUser.level) && m.depts.includes(loggedInUser.dept);
+            });
+
+            if (visible.length === 0) {
+                feed.innerHTML = `<div class="p-6 text-center text-gray-500 bg-gray-50 rounded border col-span-2">No active timed tests or examinations scheduled for <strong>${loggedInUser ? loggedInUser.level : 'your level'}</strong>.</div>`;
+                return;
+            }
+
+            feed.innerHTML = visible.map((m) => `
+                <div class="border-2 border-yellow-400 rounded-lg p-4 bg-yellow-50/40 shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-black text-blue-950 text-sm">${m.title}</h4>
+                        <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">${m.category}</span>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-gray-600 mb-2 bg-white p-1.5 rounded border">
+                        <span>Assigned Level: <strong>${m.levels.join(', ')}</strong></span>
+                        <span class="text-red-700 font-bold">⏳ Duration: ${m.duration} Mins</span>
+                    </div>
+                    <p class="text-gray-700 text-xs mb-3 whitespace-pre-line line-clamp-2 bg-white p-2 rounded border">${m.content}</p>
+                    <button onclick="launchTimedCBTModal('${m.title}', \`${m.content.replace(/`/g, '')}\`, ${m.duration})" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2 rounded text-xs shadow flex items-center justify-center gap-1">
+                        ▶ Start Timed ${m.category} (${m.duration} Mins)
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // TIMED CBT TEST SESSION MODAL WITH LIVE COUNTDOWN TIMER
+        function launchTimedCBTModal(title, content, durationMinutes) {
+            document.getElementById('testModalTitle').innerText = `Assessment: ${title}`;
+            document.getElementById('testModalContent').innerText = content;
+            toggleModal('takeTestModal', true);
+
+            // Clear previous interval if running
+            if (activeExamTimerInterval) clearInterval(activeExamTimerInterval);
+
+            let totalSeconds = durationMinutes * 60;
+            const countdownElem = document.getElementById('timerCountdown');
+
+            activeExamTimerInterval = setInterval(() => {
+                let mins = Math.floor(totalSeconds / 60);
+                let secs = totalSeconds % 60;
+                countdownElem.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                if (totalSeconds <= 0) {
+                    clearInterval(activeExamTimerInterval);
+                    alert("⏰ Time is up! Your exam session has ended automatically.");
+                    closeTestModal();
+                }
+                totalSeconds--;
+            }, 1000);
+        }
+
+        function closeTestModal() {
+            if (activeExamTimerInterval) clearInterval(activeExamTimerInterval);
+            toggleModal('takeTestModal', false);
+        }
+
+        function submitAssessmentAnswer(e) {
+            e.preventDefault();
+            if (activeExamTimerInterval) clearInterval(activeExamTimerInterval);
+            const selectedOpt = document.querySelector('input[name="cbtOption"]:checked').value;
+            alert(`Exam Submitted Successfully!\nYour response (${selectedOpt}) was submitted before the timer expired.`);
+            toggleModal('takeTestModal', false);
+        }
+
+        // WHATSAPP-STYLE STATUS & CHAT SYSTEM
+        function handleStatusSubmit(e) {
+            e.preventDefault();
+            const text = document.getElementById('statusText').value;
+            const color = document.getElementById('statusBgColor').value;
+            const file = document.getElementById('statusImageInput').files[0];
+
+            const post = (img) => {
+                const author = loggedInUser ? `${loggedInUser.name} (${loggedInUser.level || loggedInUser.role})` : "Student Guest";
+                userStatuses.unshift({ id: Date.now(), user: author, text, color, image: img, likes: 0, comments: [] });
+                renderStatusFeed();
+                toggleModal('statusUploadModal', false);
+                document.getElementById('statusText').value = "";
+            };
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => post(ev.target.result);
+                reader.readAsDataURL(file);
+            } else { post(null); }
+        }
+
+        function likeStatus(statusId) {
+            const status = userStatuses.find(s => s.id === statusId);
+            if (status) {
+                status.likes++;
+                renderStatusFeed();
+            }
+        }
+
+        function addStatusComment(statusId, inputElem) {
+            const text = inputElem.value.trim();
+            if (!text) return;
+            const status = userStatuses.find(s => s.id === statusId);
+            if (status) {
+                const commenter = loggedInUser ? loggedInUser.username : "Guest";
+                status.comments.push(`${commenter}: ${text}`);
+                renderStatusFeed();
+            }
+        }
+
+        function renderStatusFeed() {
+            document.getElementById('statusListFeed').innerHTML = userStatuses.map(s => `
+                <div class="border rounded-lg ${s.color} text-white p-3 flex flex-col justify-between shadow relative overflow-hidden">
+                    ${s.image ? `<img src="${s.image}" class="absolute inset-0 w-full h-full object-cover opacity-30">` : ''}
+                    <div class="relative z-10">
+                        <div class="font-bold text-[11px] border-b border-white/30 pb-1 mb-1">${s.user}</div>
+                        <p class="text-xs font-medium my-1">${s.text}</p>
+                    </div>
+                    
+                    <div class="relative z-10 border-t border-white/30 pt-1.5 mt-1.5 space-y-1.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <button onclick="likeStatus(${s.id})" class="bg-white/20 hover:bg-white/30 text-white font-bold px-2 py-0.5 rounded text-[10px]">
+                                👍 Like (${s.likes})
+                            </button>
+                            <span class="text-[9px] text-white/80">${s.comments.length} Comments</span>
+                        </div>
+                        
+                        <div class="max-h-12 overflow-y-auto space-y-1 text-[9px] bg-black/20 p-1 rounded">
+                            ${s.comments.map(c => `<div class="bg-white/10 px-1 py-0.5 rounded">${c}</div>`).join('')}
+                        </div>
+
+                        <input type="text" placeholder="Reply status..." onkeydown="if(event.key==='Enter') addStatusComment(${s.id}, this)" class="w-full text-[10px] p-1 rounded text-black border-none outline-none">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function sendWhatsAppMessage() {
+            const input = document.getElementById('whatsappMsgInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const senderName = loggedInUser ? loggedInUser.name : "Guest Student";
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            whatsappChatMessages.push({ sender: senderName, text, time: now });
+            input.value = "";
+            renderWhatsAppChat();
+        }
+
+        function renderWhatsAppChat() {
+            const chatBody = document.getElementById('whatsappChatBody');
+            chatBody.innerHTML = whatsappChatMessages.map(msg => `
+                <div class="flex flex-col items-start">
+                    <span class="text-[9px] font-bold text-emerald-900 ml-1">${msg.sender}</span>
+                    <div class="bg-white p-2 rounded-lg rounded-tl-none shadow-sm max-w-[85%] text-gray-800 text-xs">
+                        ${msg.text}
+                        <div class="text-[8px] text-gray-400 text-right mt-0.5">${msg.time}</div>
+                    </div>
+                </div>
+            `).join('');
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function renderContactDirectory() {
+            document.getElementById('contactListFeed').innerHTML = contactDirectory.map(c => `
+                <div class="flex justify-between items-center p-2 border rounded bg-gray-50">
+                    <div>
+                        <div class="font-bold text-gray-800">${c.name} <span class="text-[9px] bg-blue-100 text-blue-800 px-1 rounded">${c.role}</span></div>
+                        <div class="text-[10px] text-gray-500">${c.phone} | ${c.email}</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <a href="https://wa.me/234${c.phone.replace(/^0/, '')}" target="_blank" class="bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">WhatsApp</a>
+                        <a href="tel:${c.phone}" class="bg-blue-900 text-white text-[10px] px-2 py-1 rounded font-bold">Call</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function uploadFriendPicture() {
+            const file = document.getElementById('friendPicInput').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                friendsPictures.push(e.target.result);
+                renderFriendsGallery();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderFriendsGallery() {
+            document.getElementById('friendsGalleryGrid').innerHTML = friendsPictures.map(pic => `
+                <div class="border rounded overflow-hidden shadow bg-gray-100">
+                    <img src="${pic}" class="w-full h-16 object-cover">
+                </div>
+            `).join('');
+        }
+
+        function parseWordFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.name.endsWith('.docx')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    mammoth.extractRawText({ arrayBuffer: e.target.result })
+                        .then(res => document.getElementById('matTextContent').value = res.value);
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        // AUXILIARY UTILITIES & THEMES
+        function handleAutoThemeChange(e) {
+            if (!isAutoTheme) return;
+            document.getElementById('mainBody').className = e.matches ? 'theme-dark font-sans' : 'theme-classic font-sans';
+        }
+        const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        colorSchemeQuery.addEventListener('change', handleAutoThemeChange);
+
+        function setSiteTheme(themeName) {
+            const body = document.getElementById('mainBody');
+            body.style.backgroundImage = 'none';
+            if (themeName === 'auto') {
+                isAutoTheme = true;
+                handleAutoThemeChange(colorSchemeQuery);
+            } else {
+                isAutoTheme = false;
+                body.className = `${themeName} font-sans`;
+            }
+            toggleModal('themeModal', false);
+        }
+
+        function applyCustomBgPicture(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                isAutoTheme = false;
+                const body = document.getElementById('mainBody');
+                body.className = "theme-custom-pic font-sans";
+                body.style.backgroundImage = `url('${event.target.result}')`;
+                document.getElementById('resetBgBtnModal').classList.remove('hidden');
+                document.getElementById('resetBgBtnSession').classList.remove('hidden');
+                toggleModal('themeModal', false);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeBackgroundPicture() {
+            setSiteTheme('auto');
+            document.getElementById('resetBgBtnModal').classList.add('hidden');
+            document.getElementById('resetBgBtnSession').classList.add('hidden');
+        }
+
+        function toggleModal(id, show) { document.getElementById(id).classList.toggle('hidden', !show); }
+        
+        function showSection(id) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function switchAuthMode(mode) {
+            document.getElementById('unifiedLoginForm').classList.toggle('hidden', mode !== 'login');
+            document.getElementById('registerForm').classList.toggle('hidden', mode !== 'register');
+        }
+
+        function toggleRegFields(type) {
+            document.getElementById('studentFieldsContainer').classList.toggle('hidden', type !== 'STUDENT');
+            document.getElementById('lecturerFieldsContainer').classList.toggle('hidden', type !== 'LECTURER');
+        }
+
+        window.onload = () => {
+            handleAutoThemeChange(colorSchemeQuery);
+            renderAllFeeds();
+            showSection('main-auth');
+        };
+    </script>
+</body>
+</html>

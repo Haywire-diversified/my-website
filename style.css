@@ -1,0 +1,151 @@
+/* ==========================================
+   MODERN USER PROFILE CARD SYSTEM
+   ========================================== */
+
+/* 1. Root Tokens & Utility Reset */
+:root {
+  --primary-accent: #2563eb;
+  --secondary-accent: #3b82f6;
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.125);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --radius-lg: 20px;
+  --radius-sm: 8px;
+  --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 2. Responsive Centering Canvas */
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--bg-gradient);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-main);
+  padding: 1.5rem;
+}
+
+/* 3. Glassmorphism Card Container */
+.profile-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: transform 0.3s var(--transition-smooth), box-shadow 0.3s var(--transition-smooth);
+}
+
+.profile-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 60px rgba(37, 99, 235, 0.2);
+}
+
+/* Accent Glow Accent on Hover */
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--primary-accent), transparent);
+  transition: left 0.6s var(--transition-smooth);
+}
+
+.profile-card:hover::before {
+  left: 100%;
+}
+
+/* 4. Avatar with Status Indicator */
+.avatar-wrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-accent);
+}
+
+.status-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  background-color: #10b981;
+  border: 2px solid #0f172a;
+  border-radius: 50%;
+}
+
+/* 5. Member Information */
+.profile-info {
+  text-align: center;
+}
+
+.profile-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.profile-role {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.department-tag {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+}
+
+/* 6. Action Button */
+.btn-primary {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--primary-accent);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+  background: var(--secondary-accent);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
